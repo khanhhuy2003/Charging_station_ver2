@@ -4,7 +4,7 @@ File kiểm tra nhanh thư viện modbus_rtu_master.py
 """
 
 import time
-from Modbus_RTU import ModbusRtuMaster, ModbusMasterConfig
+from modbus_rtu import ModbusRtuMaster, ModbusMasterConfig
 
 
 def on_data_received(slave_addr: int, func_code: int, reg_addr: int, data: list, length: int):
