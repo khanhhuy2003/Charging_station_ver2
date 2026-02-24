@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog_pin</class>
+ <widget class="QDialog" name="Dialog_pin">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>349</width>
+    <height>506</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">    QPushButton {
+        background-color: #0288D1;
+        color: white;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: bold;
+        padding: 10px;
+    }
+    QPushButton:hover {
+        background-color: #0277BD;
+    }</string>
+  </property>
+  <widget class="QFrame" name="frame">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>10</y>
+     <width>311</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">border: none;
+border-radius: 20px;          /* bo góc 12px – chỉnh lớn hơn nếu muốn tròn hơn */
+background-color: #E0F7FA;    /* xanh nước biển nhạt đẹp nhất */
+padding: 10px;                /* khoảng cách bên trong để nội dung không sát góc */</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>37</x>
+      <y>1</y>
+      <width>251</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>14</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: #01579B</string>
+    </property>
+    <property name="text">
+     <string>       Thông số chi tiết</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QTableWidget" name="tableWidget">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>60</y>
+     <width>311</width>
+     <height>401</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">            QTableWidget {
+                gridline-color: #81D4FA;
+                font-size: 16px;
+                alternate-background-color: #F0F8FF;
+            }
+            QHeaderView::section {
+                background-color: #0288D1;
+                color: white;
+                padding: 8px;
+                font-weight: bold;
+                border: 1px solid #81D4FA;
+            }
+            QTableWidget::item {
+                padding: 6px;
+            }</string>
+   </property>
+   <property name="horizontalScrollBarPolicy">
+    <enum>Qt::ScrollBarAlwaysOff</enum>
+   </property>
+   <property name="alternatingRowColors">
+    <bool>true</bool>
+   </property>
+   <property name="rowCount">
+    <number>15</number>
+   </property>
+   <property name="columnCount">
+    <number>2</number>
+   </property>
+   <attribute name="horizontalHeaderMinimumSectionSize">
+    <number>80</number>
+   </attribute>
+   <attribute name="horizontalHeaderDefaultSectionSize">
+    <number>150</number>
+   </attribute>
+   <attribute name="horizontalHeaderStretchLastSection">
+    <bool>true</bool>
+   </attribute>
+   <attribute name="verticalHeaderVisible">
+    <bool>false</bool>
+   </attribute>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <column>
+    <property name="text">
+     <string>Thông số</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Giá trị</string>
+    </property>
+   </column>
+   <item row="0" column="0">
+    <property name="text">
+     <string>SOC</string>
+    </property>
+   </item>
+   <item row="0" column="1">
+    <property name="text">
+     <string>0</string>
+    </property>
+   </item>
+   <item row="1" column="0">
+    <property name="text">
+     <string>SOH</string>
+    </property>
+   </item>
+   <item row="1" column="1">
+    <property name="text">
+     <string>0</string>
+    </property>
+   </item>
+   <item row="2" column="0">
+    <property name="text">
+     <string>Current (mA)</string>
+    </property>
+   </item>
+   <item row="2" column="1">
+    <property name="text">
+     <string>0</string>
+    </property>
+   </item>
+   <item row="3" column="0">
+    <property name="text">
+     <string>Pack Voltage (V)</string>
+    </property>
+   </item>
+   <item row="3" column="1">
+    <property name="text">
+     <string>0</string>
+    </property>
+   </item>
+   <item row="4" column="0">
+    <property name="text">
+     <string>Stack Voltage</string>
+    </property>
+   </item>
+   <item row="4" column="1">
+    <property name="text">
+     <string>0</string>
+    </property>
+   </item>
+   <item row="5" column="0">
+    <property name="text">
+     <string>Faults</string>
+    </property>
+   </item>
+   <item row="5" column="1">
+    <property name="text">
+     <string>0</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QPushButton" name="close_button_pin_dialog_1">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>470</y>
+     <width>311</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">    QPushButton {
+        background-color: #0288D1;
+        color: white;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 10px;
+    }
+    QPushButton:hover {
+        background-color: #0277BD;
+    }</string>
+   </property>
+   <property name="text">
+    <string>Đóng</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

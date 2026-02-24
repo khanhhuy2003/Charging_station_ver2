@@ -1,0 +1,42 @@
+# Tạo hoặc mở file .gitignore
+touch .gitignore
+
+# Thêm toàn bộ nội dung trên vào file (cách nhanh)
+cat << 'EOF' >> .gitignore
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+
+# PyQt5 / Qt binary files (tránh lỗi Mapbox)
+*/Qt*/plugins/
+*/PyQt5/Qt*/plugins/
+*/site-packages/PyQt5/Qt5/plugins/
+*.so
+*.dll
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.spec
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+
+# Misc
+*.log
+.DS_Store
+Thumbs.db
+EOF
