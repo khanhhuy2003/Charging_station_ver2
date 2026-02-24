@@ -1,6 +1,3 @@
-# limit_switch.py
-# Limit Switch Library using pigpio - Python port from ESP32 C library
-
 import pigpio
 import threading
 from enum import IntEnum

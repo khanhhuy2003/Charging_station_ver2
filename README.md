@@ -3,10 +3,10 @@ Step 1: Create virtual environment
 python -m venv venv
 
 #if on window:
-venv\Scripts\activate
+.venv\Scripts\activate
 
 #if on linux: 
-source venv/bin/activate
+source .venv/bin/activate
 
 Step 2: Install necessary libraries
 pip install -r requirements.txt

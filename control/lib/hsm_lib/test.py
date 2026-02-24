@@ -1,231 +1,209 @@
-from typing import Any
-from hsm import Hsm, HsmState, HsmEvent, HsmResult, HISTORY
+import time
+from typing import Any, Optional
+
+from hsm import (
+    Hsm, HsmState, HsmEvent, HsmResult,
+    HsmEvent as HEVT,  
+    HISTORY
+)
+
+# ────────────────────────────────────────────────
+# Định nghĩa event user (tương tự HEVT_ trong C)
+# ────────────────────────────────────────────────
+HEVT_BUTTON_START = HEVT.USER + 1
+HEVT_BUTTON_STOP = HEVT.USER + 2
+HEVT_BATTERY_OK = HEVT.USER + 3
+HEVT_CHARGING_DONE = HEVT.USER + 4
+HEVT_ERROR_OVER_TEMP = HEVT.USER + 10
+HEVT_MASTER_GET_SLOT_DATA = HEVT.USER + 20   # Giả lập Modbus polling
+HEVT_MASTER_SLOT_NOTCONNECTED = HEVT.USER + 21
 
 
 # ────────────────────────────────────────────────
-# Các event user-defined (nhiều event hơn)
+# Cấu trúc HSM cho mainboard (tương đương app_state_hsm_t)
 # ────────────────────────────────────────────────
-EVENT_BUTTON_START = HsmEvent.USER + 1      # Nút bắt đầu sạc
-EVENT_BUTTON_STOP = HsmEvent.USER + 2       # Nút dừng sạc
-EVENT_BATTERY_CONNECTED = HsmEvent.USER + 3 # Phát hiện pin kết nối
-EVENT_BATTERY_DISCONNECTED = HsmEvent.USER + 4  # Pin ngắt kết nối
-EVENT_TIMER_EXPIRED = HsmEvent.USER + 5     # Timer hết (ví dụ kiểm tra định kỳ)
-EVENT_CHARGING_DONE = HsmEvent.USER + 6     # Sạc hoàn tất (đầy pin)
-EVENT_OVER_TEMP = HsmEvent.USER + 10        # Lỗi quá nhiệt
-EVENT_COMM_ERROR = HsmEvent.USER + 11       # Lỗi giao tiếp Modbus
-EVENT_LOW_VOLTAGE = HsmEvent.USER + 12      # Lỗi áp thấp
+class AppStateHSM:
+    def __init__(self):
+        self.hsm = Hsm("ChargerHSM")
+        
+        # Có thể thêm dữ liệu trạng thái nếu cần
+        self.slot_data_received = False
+        self.error_count = 0
+
+
+mainboard = AppStateHSM()
 
 
 # ────────────────────────────────────────────────
-# Các handler cho state (ví dụ máy sạc xe điện với hierarchy phức tạp)
+# Handler cho các state (tương đương handler trong C)
 # ────────────────────────────────────────────────
 
 def root_handler(hsm: Hsm, event: int, data: Any) -> int:
-    """Handler cho Root - xử lý event chung toàn hệ thống (không lan lên đâu nữa)"""
-    if event == EVENT_COMM_ERROR:
-        print("[Root] Lỗi giao tiếp nghiêm trọng → chuyển sang Error")
-        hsm.transition(comm_fail_state)
-        return HsmEvent.NONE
-    print(f"[Root] Event {event} không được xử lý ở bất kỳ state nào")
-    return HsmEvent.NONE
+    print(f"[Root] Nhận event: 0x{event:04x}")
+    if event == HEVT_MASTER_SLOT_NOTCONNECTED:
+        print("[Root] Slot không kết nối → chuyển sang Error")
+        hsm.transition(error_state)
+        return HEVT.NONE
+    return HEVT.NONE
 
 
 def idle_handler(hsm: Hsm, event: int, data: Any) -> int:
-    """Handler cho Idle - trạng thái chờ"""
-    if event == HsmEvent.ENTRY:
-        print("→ Vào Idle: Đèn LED chờ, hiển thị 'Ready'")
+    if event == HEVT.ENTRY:
+        print("→ Vào Idle: Hiển thị 'Ready', đèn LED chờ")
     
-    if event == HsmEvent.EXIT:
-        print("← Thoát Idle: Chuẩn bị bắt đầu sạc")
+    if event == HEVT.EXIT:
+        print("← Thoát Idle")
     
-    if event == EVENT_BUTTON_START:
-        print("[Idle] Nhấn Start → kiểm tra pin")
+    if event == HEVT_BUTTON_START:
+        print("[Idle] Nhấn START → chuyển sang PreCharge")
         hsm.transition(precharge_state)
-        return HsmEvent.NONE
+        return HEVT.NONE
     
-    if event == EVENT_BATTERY_CONNECTED:
-        print("[Idle] Phát hiện pin → tự động bắt đầu")
-        hsm.transition(precharge_state)
-        return HsmEvent.NONE
-    
-    return event  # lan lên Root nếu không xử lý
+    return event  # lan lên Root
 
 
 def charging_handler(hsm: Hsm, event: int, data: Any) -> int:
-    """Handler cho Charging (cha) - xử lý chung cho tất cả chế độ sạc"""
-    if event == HsmEvent.ENTRY:
-        print("→ Vào Charging: Bật relay chính, khởi động đo dòng áp, bật quạt")
-        # Code: bật relay, start modbus polling...
+    if event == HEVT.ENTRY:
+        print("→ Vào Charging: Bật relay chính, khởi động đo áp/dòng")
     
-    if event == HsmEvent.EXIT:
-        print("← Thoát Charging: Tắt relay, dừng đo, lưu log sạc")
-        # Code: tắt relay, lưu Wh...
+    if event == HEVT.EXIT:
+        print("← Thoát Charging: Tắt relay, lưu log sạc")
     
-    if event == EVENT_BUTTON_STOP:
-        print("[Charging] Nhấn Stop → dừng sạc, quay về Idle")
+    if event == HEVT_BUTTON_STOP:
+        print("[Charging] Nhấn STOP → quay về Idle")
         hsm.transition(idle_state)
-        return HsmEvent.NONE
+        return HEVT.NONE
     
-    if event == EVENT_OVER_TEMP:
+    if event == HEVT_ERROR_OVER_TEMP:
         print("[Charging] Quá nhiệt → chuyển sang Error")
-        hsm.transition(over_temp_state)
-        return HsmEvent.NONE
+        hsm.transition(error_state)
+        return HEVT.NONE
     
-    if event == EVENT_BATTERY_DISCONNECTED:
-        print("[Charging] Pin ngắt → dừng sạc")
-        hsm.transition(idle_state)
-        return HsmEvent.NONE
+    if event == HEVT_MASTER_GET_SLOT_DATA:
+        print("[Charging] Nhận dữ liệu slot từ Modbus → xử lý")
+        mainboard.slot_data_received = True
+        return HEVT.NONE
     
-    return event  # lan lên Root nếu không xử lý
+    return event  # lan lên Root
 
 
 def precharge_handler(hsm: Hsm, event: int, data: Any) -> int:
-    """Handler cho PreCharge - trạng thái kiểm tra ban đầu (con của Charging)"""
-    if event == HsmEvent.ENTRY:
-        print("→ Vào PreCharge: Đo áp ban đầu, kiểm tra kết nối (5 giây)")
-        # Giả sử start timer để kiểm tra
+    if event == HEVT.ENTRY:
+        print("→ Vào PreCharge: Đo áp ban đầu, kiểm tra kết nối...")
     
-    if event == EVENT_TIMER_EXPIRED:
-        print("[PreCharge] Kiểm tra xong, áp OK → chuyển sang CC_Charging")
+    if event == HEVT.EXIT:
+        print("← Thoát PreCharge")
+    
+    if event == HEVT_BATTERY_OK:
+        print("[PreCharge] Pin OK → chuyển sang CC_Charging")
         hsm.transition(cc_charging_state)
-        return HsmEvent.NONE
-    
-    if event == EVENT_LOW_VOLTAGE:
-        print("[PreCharge] Áp thấp → lỗi")
-        hsm.transition(low_voltage_state)
-        return HsmEvent.NONE
+        return HEVT.NONE
     
     return event  # lan lên Charging
 
 
 def cc_charging_handler(hsm: Hsm, event: int, data: Any) -> int:
-    """Handler cho CC_Charging - sạc dòng hằng (con của Charging)"""
-    if event == HsmEvent.ENTRY:
-        print("→ Vào CC_Charging: Đặt dòng 10A, theo dõi áp")
+    if event == HEVT.ENTRY:
+        print("→ Vào CC_Charging: Đặt dòng 10A, theo dõi áp tăng")
     
-    if event == EVENT_CHARGING_DONE:
-        print("[CC_Charging] Đầy 80% → chuyển sang CV_Charging")
-        hsm.transition(cv_charging_state)
-        return HsmEvent.NONE
+    if event == HEVT.EXIT:
+        print("← Thoát CC_Charging")
     
-    if event == EVENT_TIMER_EXPIRED:
-        print("[CC_Charging] Kiểm tra định kỳ: áp tăng → OK")
-        return HsmEvent.NONE
-    
-    return event  # lan lên Charging
-
-
-def cv_charging_handler(hsm: Hsm, event: int, data: Any) -> int:
-    """Handler cho CV_Charging - sạc áp hằng (con của Charging)"""
-    if event == HsmEvent.ENTRY:
-        print("→ Vào CV_Charging: Đặt áp 4.2V, giảm dòng dần")
-    
-    if event == EVENT_CHARGING_DONE:
-        print("[CV_Charging] Đầy pin → quay về Idle")
+    if event == HEVT_CHARGING_DONE:
+        print("[CC_Charging] Đầy pin → hoàn tất, quay về Idle")
         hsm.transition(idle_state)
-        return HsmEvent.NONE
+        return HEVT.NONE
     
     return event  # lan lên Charging
 
 
 def error_handler(hsm: Hsm, event: int, data: Any) -> int:
-    """Handler cho Error (cha) - xử lý chung cho lỗi"""
-    if event == HsmEvent.ENTRY:
-        print("→ Vào Error: Bật đèn đỏ, buzzer kêu, gửi cảnh báo Modbus")
+    if event == HEVT.ENTRY:
+        print("→ Vào Error: Bật đèn đỏ, buzzer, gửi cảnh báo")
+        mainboard.error_count += 1
     
-    if event == HsmEvent.EXIT:
-        print("← Thoát Error: Reset buzzer, quay về Idle")
+    if event == HEVT.EXIT:
+        print("← Thoát Error: Reset buzzer")
     
-    if event == EVENT_BUTTON_START:
-        print("[Error] Nhấn Start → thử reset lỗi")
+    if event == HEVT_BUTTON_START:
+        print("[Error] Nhấn START → thử reset về Idle")
         hsm.transition(idle_state)
-        return HsmEvent.NONE
+        return HEVT.NONE
     
     return event  # lan lên Root
 
 
-def over_temp_handler(hsm: Hsm, event: int, data: Any) -> int:
-    """Handler cho OverTemp - lỗi quá nhiệt (con của Error)"""
-    if event == HsmEvent.ENTRY:
-        print("→ Vào OverTemp: Tắt nguồn, chờ nguội")
-    
-    if event == EVENT_TIMER_EXPIRED:
-        print("[OverTemp] Nhiệt độ giảm → thử reset")
-        hsm.transition(idle_state)
-        return HsmEvent.NONE
-    
-    return event  # lan lên Error
-
-
-def comm_fail_handler(hsm: Hsm, event: int, data: Any) -> int:
-    """Handler cho CommFail - lỗi giao tiếp (con của Error)"""
-    if event == HsmEvent.ENTRY:
-        print("→ Vào CommFail: Thử reconnect Modbus")
-    
-    return event  # lan lên Error
-
-
-def low_voltage_handler(hsm: Hsm, event: int, data: Any) -> int:
-    """Handler cho LowVoltage - lỗi áp thấp (con của Error)"""
-    if event == HsmEvent.ENTRY:
-        print("→ Vào LowVoltage: Kiểm tra nguồn đầu vào")
-    
-    return event  # lan lên Error
-
-
 # ────────────────────────────────────────────────
-# Tạo cây state (hierarchy phức tạp)
+# Khai báo các state (cây hierarchy)
 # ────────────────────────────────────────────────
-root = HsmState("Root", root_handler)
+root_state = HsmState("Root", root_handler, None)
 
-idle_state = HsmState("Idle", idle_handler, root)
+idle_state = HsmState("Idle", idle_handler, root_state)
 
-charging_state = HsmState("Charging", charging_handler, root)
+charging_state = HsmState("Charging", charging_handler, root_state)
 precharge_state = HsmState("PreCharge", precharge_handler, charging_state)
 cc_charging_state = HsmState("CC_Charging", cc_charging_handler, charging_state)
-cv_charging_state = HsmState("CV_Charging", cv_charging_handler, charging_state)
 
-error_state = HsmState("Error", error_handler, root)
-over_temp_state = HsmState("OverTemp", over_temp_handler, error_state)
-comm_fail_state = HsmState("CommFail", comm_fail_handler, error_state)
-low_voltage_state = HsmState("LowVoltage", low_voltage_handler, error_state)
+error_state = HsmState("Error", error_handler, root_state)
 
 
 # ────────────────────────────────────────────────
-# Khởi tạo và test HSM
+# Hàm giả lập dispatch event (tương đương callback trong C)
 # ────────────────────────────────────────────────
-def main():
-    machine = Hsm("ChargerHSM")
-    result = machine.init(idle_state)
-    print(f"Khởi tạo: {HsmResult(result).name}")
+def simulate_events():
+    print("\n=== Bắt đầu giả lập sự kiện ===\n")
 
-    # Bắt đầu sạc
-    print("\n--- Nhấn nút Start ---")
-    machine.dispatch(EVENT_BUTTON_START)  # Idle → PreCharge
+    time.sleep(2)
+    print("Giả lập: Nhấn nút START")
+    mainboard.hsm.dispatch(HEVT_BUTTON_START)
 
-    # Kiểm tra pin OK (timer expired)
-    print("\n--- Timer kiểm tra hết ---")
-    machine.dispatch(EVENT_TIMER_EXPIRED)  # PreCharge → CC_Charging
+    time.sleep(2)
+    print("Giả lập: Pin kết nối OK (từ Modbus hoặc kiểm tra)")
+    mainboard.hsm.dispatch(HEVT_BATTERY_OK)
 
-    # Đầy 80% → chuyển CV
-    print("\n--- Sạc đầy 80% ---")
-    machine.dispatch(EVENT_CHARGING_DONE)  # CC_Charging → CV_Charging
+    time.sleep(2)
+    print("Giả lập: Nhận dữ liệu slot từ Modbus polling")
+    mainboard.hsm.dispatch(HEVT_MASTER_GET_SLOT_DATA)
 
-    # Lỗi quá nhiệt
-    print("\n--- Phát hiện quá nhiệt ---")
-    machine.dispatch(EVENT_OVER_TEMP)      # CV_Charging → OverTemp
+    time.sleep(2)
+    print("Giả lập: Phát hiện quá nhiệt")
+    mainboard.hsm.dispatch(HEVT_ERROR_OVER_TEMP)
 
-    # Reset lỗi bằng nút
-    print("\n--- Nhấn nút Start để reset ---")
-    machine.dispatch(EVENT_BUTTON_START)   # OverTemp → Idle
+    time.sleep(2)
+    print("Giả lập: Nhấn nút START để reset lỗi")
+    mainboard.hsm.dispatch(HEVT_BUTTON_START)
 
-    # Lỗi giao tiếp
-    print("\n--- Lỗi Modbus ---")
-    machine.dispatch(EVENT_COMM_ERROR)     # Idle → CommFail (lan lên Root)
+    time.sleep(2)
+    print("Giả lập: Nhấn nút STOP")
+    mainboard.hsm.dispatch(HEVT_BUTTON_STOP)
+
+    time.sleep(2)
+    print("Giả lập: Sạc hoàn tất")
+    mainboard.hsm.dispatch(HEVT_CHARGING_DONE)
 
     if HISTORY:
-        print("\n--- Transition về history (quay về Idle) ---")
-        machine.transition_history()
+        time.sleep(2)
+        print("Giả lập: Transition về history")
+        mainboard.hsm.transition_history()
+
+    print("\n=== Test HSM hoàn tất ===")
+    print(f"Trạng thái cuối: {mainboard.hsm.get_current_state().name if mainboard.hsm.get_current_state() else 'None'}")
+
+
+def main():
+    print("=====================================")
+    print("  Test logic HSM trên Python")
+    print("  (không phần cứng, chỉ giả lập event)")
+    print("=====================================\n")
+
+    # Khởi tạo HSM (tương đương app_state_hsm_init)
+    print("Khởi tạo HSM...")
+    result = mainboard.hsm.init(idle_state)
+    print(f"Khởi tạo HSM: {HsmResult(result).name}")
+    print(f"Trạng thái ban đầu: {mainboard.hsm.get_current_state().name}")
+
+    # Chạy giả lập sự kiện
+    simulate_events()
 
 
 if __name__ == "__main__":

@@ -15,11 +15,11 @@ def on_data_received(slave_addr: int, func_code: int, reg_addr: int, data: list,
 def main():
     # Cấu hình – thay đổi theo thiết bị thật của bạn
     config = ModbusMasterConfig(
-        port="/dev/ttyUSB0",       # hoặc "/dev/serial0", "/dev/ttyAMA0"
+        port="/dev/ttyS0",       # hoặc "/dev/serial0", "/dev/ttyAMA0"
         baudrate=9600,
         parity="N",
         timeout=1.0,
-        # rts_pin=18,              # Nếu dùng GPIO điều khiển DE/RE, uncomment và thay số pin
+        # rts_pin=18,             
     )
 
     master = ModbusRtuMaster(config)

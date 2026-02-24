@@ -1,9 +1,3 @@
-"""
-hsm.py
-Hierarchical State Machine (HSM) library cho Python
-Version: 2.0.0 (port từ C)
-"""
-
 from typing import Callable, Any, Optional
 from enum import IntEnum
 
