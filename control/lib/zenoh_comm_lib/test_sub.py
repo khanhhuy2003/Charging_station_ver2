@@ -5,10 +5,11 @@ count = 0
 
 def on_data(sample):
     global count
-    raw = bytes(sample.payload)
+    #raw = bytes(sample.payload)
+    raw = sample.payload.to_string()
     count += 1
     print(
-        f"📥 RECV {sample.key_expr} "
+        f"📥 RECV {sample.key_expr}, data received: {raw} "
         f"=> bytes(length={len(raw)}), count={count}"
     )
 

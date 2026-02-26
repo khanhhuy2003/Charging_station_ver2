@@ -1,6 +1,6 @@
 Step 1: Create virtual environment
 
-python -m venv venv
+python3 -m venv venv
 
 #if on window:
 .venv\Scripts\activate
