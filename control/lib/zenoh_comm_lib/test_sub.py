@@ -16,7 +16,8 @@ def on_data(sample):
 def main():
     client = ZenohClient()
 
-    key = "demo/charging_station"
+    # key = "demo/charging_station"
+    key = "charger_1/charger/robot_request"
     client.sub(key, on_data)
 
     print("🟢 Subscriber running... Ctrl+C to stop")
