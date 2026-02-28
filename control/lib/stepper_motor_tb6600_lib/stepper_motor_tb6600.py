@@ -109,7 +109,7 @@ class StepperConfig:
         microstep     : int                                       = Microstep.FULL,
         max_speed_rpm : int                                       = 300,
         min_speed_rpm : int                                       = 40,
-        accel_percent : int                                       = 30,
+        accel_percent : int                                       = 15,
         accel_easing  : str                                       = 'cubic',
         auto_enable   : bool                                      = True,
         complete_cb   : Optional[Callable[['StepperMotor', Any], None]] = None,
@@ -728,8 +728,8 @@ if __name__ == "__main__":
         microstep     = Microstep.EIGHTH,   # 1/8 → 1600 step/vòng
         max_speed_rpm = 300,
         min_speed_rpm = 40,
-        accel_percent = 30,                  # 30% tăng tốc, 30% giảm tốc
-        accel_easing  = 'cubic',
+        accel_percent = 15,                  # 30% tăng tốc, 30% giảm tốc
+        accel_easing  = 'linear',
         auto_enable   = True,
         complete_cb   = on_done,
         user_data     = "test",
@@ -746,26 +746,26 @@ if __name__ == "__main__":
 
         time.sleep(0.5)
 
-        # ── Test 2: Quay về 0 ──────────────────
-        print("\n=== Test 2: Quay về 0 ===")
-        motor.move_to(0, rpm=250)
-        done = motor.wait_until_done(timeout=15)
-        print(f"Kết quả: {'✅ Done' if done else '⏱ Timeout'}  pos={motor.position}")
+        # # ── Test 2: Quay về 0 ──────────────────
+        # print("\n=== Test 2: Quay về 0 ===")
+        # motor.move_to(0, rpm=250)
+        # done = motor.wait_until_done(timeout=15)
+        # print(f"Kết quả: {'✅ Done' if done else '⏱ Timeout'}  pos={motor.position}")
 
-        time.sleep(0.5)
+        # time.sleep(0.5)
 
-        # ── Test 3: Chạy liên tục 3 giây ───────
-        print("\n=== Test 3: Velocity mode 3 giây ===")
-        motor.run_continuous(150)
-        time.sleep(3)
-        motor.stop()
-        print(f"Dừng tại pos={motor.position}")
+        # # ── Test 3: Chạy liên tục 3 giây ───────
+        # print("\n=== Test 3: Velocity mode 3 giây ===")
+        # motor.run_continuous(150)
+        # time.sleep(3)
+        # motor.stop()
+        # print(f"Dừng tại pos={motor.position}")
 
-        # ── Test 4: Hành trình ngắn (10 steps) ─
-        print("\n=== Test 4: Hành trình ngắn 10 steps ===")
-        motor.move_steps(10, rpm=100)
-        motor.wait_until_done(timeout=5)
-        print(f"pos={motor.position}")
+        # # ── Test 4: Hành trình ngắn (10 steps) ─
+        # print("\n=== Test 4: Hành trình ngắn 10 steps ===")
+        # motor.move_steps(10, rpm=100)
+        # motor.wait_until_done(timeout=5)
+        # print(f"pos={motor.position}")
 
     except KeyboardInterrupt:
         print("\n⚠ Dừng bởi người dùng")

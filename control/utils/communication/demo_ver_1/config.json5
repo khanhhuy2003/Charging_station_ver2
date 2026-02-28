@@ -1,9 +1,9 @@
 {
   mode: "peer",
 
-  connect: {
+  listen: {
     endpoints: [
-      "tcp/10.211.77.216:56789"
+      "tcp/10.162.131.249:56789"
     ]
   },
 

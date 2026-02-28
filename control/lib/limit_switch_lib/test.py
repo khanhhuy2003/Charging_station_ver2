@@ -22,7 +22,7 @@ def main():
     # Khởi tạo limit switch trên GPIO17, active LOW (nối GND khi nhấn)
     switch = LimitSwitch(
         pi=pi,
-        gpio_pin=17,
+        gpio_pin=23,
         active_level=0,
         debounce_ms=50,
         callback=on_switch_event,

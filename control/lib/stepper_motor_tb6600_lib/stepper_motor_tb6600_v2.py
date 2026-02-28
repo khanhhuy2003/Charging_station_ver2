@@ -512,23 +512,23 @@ if __name__ == "__main__":
 
     try:
         print("=== Test 1: Di chuyển 1600 steps CW ===")
-        motor.move_steps(1600, 200)
+        motor.move_steps(16000, 600)
         motor.wait_until_done(timeout=15)
 
         time.sleep(0.5)
 
         print("=== Test 2: move_to vị trí 0 ===")
-        motor.move_to(0, 200)
+        motor.move_to(0, 400)
         motor.wait_until_done(timeout=15)
 
-        time.sleep(0.5)
+        # time.sleep(0.5)
 
-        print("=== Test 3: Chạy liên tục 2 giây ===")
-        motor.run_continuous(150)
-        time.sleep(2)
-        motor.stop()
+        # print("=== Test 3: Chạy liên tục 2 giây ===")
+        # motor.run_continuous(150)
+        # time.sleep(2)
+        # motor.stop()
 
-        print(f"Vị trí cuối: {motor.position}")
+        # print(f"Vị trí cuối: {motor.position}")
 
     except KeyboardInterrupt:
         print("\nDừng bởi người dùng")
