@@ -154,7 +154,7 @@ class ChargingGateway:
     # ==========================================
 
     def publish_status(self):
-        payload = self.json_api.build_status_json()
+        payload = self.build_status_json()
         self.zenoh.pub(
             topics.robot_progress("vinmotion_2"),
             payload
