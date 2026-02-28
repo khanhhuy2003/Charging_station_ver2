@@ -1,7 +1,7 @@
 import json
 from control.utils.var_shared_utils import RobotSendData, ChargerSendData
 
-def json_build_charger_response(ds, status : ChargerSendData): #for demo ver 1, charger respone
+def json_build_charger_response(ds, status : ChargerSendData): 
     return json.dumps({
         "charger_name": ds["charger_name"],
         "charger_MAC": ds["charger_MAC"],
@@ -17,7 +17,7 @@ def json_build_charger_response(ds, status : ChargerSendData): #for demo ver 1, 
             }
         }
     })
-#def json_build_v2(ds):
+
 
 def parse_json(payload):
     try:

@@ -192,10 +192,6 @@ class StepperMotor:
     # ══════════════════════════════════════════
 
     def _on_pulse(self, gpio, level, tick):
-        """
-        Pigpio GPIO callback – gọi mỗi RISING_EDGE trên pulse_pin.
-        Chạy trong thread nội bộ của pigpio → rất nhanh, không bị GIL.
-        """
         with self._lock:
             if not self._running or self._mode != Mode.POSITION:
                 return
@@ -354,7 +350,7 @@ class StepperMotor:
 
         direction = Dir.CW if steps > 0 else Dir.CCW
         self.set_direction(direction)
-        time.sleep(0.001)   # Cho DIR pin ổn định
+        time.sleep(0.001)   
 
         abs_steps = abs(steps)
         accel_eff = self._calc_accel_steps(abs_steps)
@@ -512,20 +508,20 @@ if __name__ == "__main__":
 
     try:
         print("=== Test 1: Di chuyển 1600 steps CW ===")
-        motor.move_steps(16000, 600)
+        motor.move_steps(64000, 600)
         motor.wait_until_done(timeout=15)
 
         time.sleep(0.5)
 
         print("=== Test 2: move_to vị trí 0 ===")
-        motor.move_to(0, 400)
+        motor.move_to(0, 600)
         motor.wait_until_done(timeout=15)
 
-        # time.sleep(0.5)
+        time.sleep(0.5)
 
         # print("=== Test 3: Chạy liên tục 2 giây ===")
         # motor.run_continuous(150)
-        # time.sleep(2)
+        # time.sleep(10)
         # motor.stop()
 
         # print(f"Vị trí cuối: {motor.position}")

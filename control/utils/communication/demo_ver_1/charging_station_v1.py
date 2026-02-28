@@ -6,21 +6,13 @@ from enum import Enum
 
 from control.lib.zenoh_comm_lib.zenoh_comm import ZenohClient
 from control.utils.communication import topics
-
+from control.utils.communication import json_api
 #python3 -m control.utils.communication.demo_ver_1.charging_station_v1
-# ==========================================
-# ENUM
-# ==========================================
 
 class ChargingProgress(Enum):
     DOING_UPPER = "DOING_ABOVE"
     DOING_LOWER = "DOING_BELOW"
     DONE = "DONE"
-
-
-# ==========================================
-# GATEWAY (Pi = TCP Client)
-# ==========================================
 
 class ChargingGateway:
 
@@ -50,7 +42,6 @@ class ChargingGateway:
         ).start()
 
         # ---- Zenoh ----
-        
         self.zenoh.sub(
             key="charger_1/charger/robot_request",
             cb=self.zenoh_rx_from_robot
@@ -63,7 +54,7 @@ class ChargingGateway:
     def connect_to_esp32(self):
         while True:
             try:
-                print("🔌 Connecting to ESP32...")
+                print("Connecting to ESP32...")
                 self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.client_socket.connect((self.esp32_ip, self.esp32_port))
                 print("Connected to ESP32")
@@ -105,7 +96,7 @@ class ChargingGateway:
 
     def zenoh_rx_from_robot(self, sample):
         raw = sample.payload.to_string()
-        print("📩 Robot → Charger:", raw)
+        print("Robot → Charger:", raw)
 
         try:
             robot_msg = json.loads(raw)
@@ -155,7 +146,7 @@ class ChargingGateway:
                 self.publish_status()
 
             except Exception as e:
-                print("❌ TCP RX error:", e)
+                print("TCP RX error:", e)
                 self.connect_to_esp32()
 
     # ==========================================
@@ -163,7 +154,7 @@ class ChargingGateway:
     # ==========================================
 
     def publish_status(self):
-        payload = self.build_status_json()
+        payload = self.json_api.build_status_json()
         self.zenoh.pub(
             topics.robot_progress("vinmotion_2"),
             payload
